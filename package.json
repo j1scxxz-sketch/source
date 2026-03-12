@@ -1,0 +1,44 @@
+{
+  "name": "juju-lol",
+  "version": "2.0.0",
+  "description": "juju.lol — custom Synapse Z executor UI",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev":   "tsc && electron .",
+    "pack":  "npm run build && electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "typescript": "^5.0.0"
+  },
+  "build": {
+    "appId": "lol.juju.executor",
+    "productName": "juju.lol",
+    "copyright": "juju.lol",
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "juju.lol"
+    },
+    "files": [
+      "dist/**/*",
+      "src/index.html",
+      "assets/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  }
+}
