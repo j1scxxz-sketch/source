@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:;">
+<title>juju.lol</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── greys ── */
+  --bg:   #1c1c20;   /* main background */
+  --bg1:  #242428;   /* sidebar, titlebar, panels */
+  --bg2:  #2a2a2f;   /* cards, inputs */
+  --bg3:  #313137;   /* hover, active bg */
+  --bg4:  #38383f;   /* deeper elements */
+  --bg5:  #404049;   /* borders heavy */
+  --ln:   #2e2e34;   /* subtle divider */
+  --ln2:  #363640;   /* normal border */
+  --ln3:  #414150;   /* active border */
+
+  /* editor — barely darker than --bg so it blends, not a cave */
+  --edi:  #19191d;
+
+  /* ── text ── */
+  --t0:   #e2e2e8;
+  --t1:   #9090a0;
+  --t2:   #565668;
+  --t3:   #35353f;
+
+  /* ── accent: sky blue ── */
+  --a1:   #38bdf8;
+  --a2:   #0ea5e9;
+  --alow: rgba(56,189,248,.12);
+  --aglow:rgba(56,189,248,.35);
+
+  /* ── semantic ── */
+  --ok:   #3dc97a;
+  --err:  #f05252;
+  --warn: #f5a623;
+  --inf:  #4ca3e4;
+
+  --r:  7px;
+  --rs: 5px;
+  --ui: 'Geist', sans-serif;
+  --mo: 'Geist Mono', monospace;
+
+  /* syntax */
+  --kw: #b48eff;
+  --fn: #79c4f9;
+  --st: #7de8b0;
+  --nm: #ffad6a;
+  --cm: #4e5060;
+  --op: #72d7ef;
+  --bl: #ff9ac1;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--t0); font-family: var(--ui); -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg5); }
+select option { background: var(--bg2); }
+
+/* ────────────────────── TITLEBAR ────────────────────── */
+#tb {
+  height: 38px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--ln);
+  display: flex;
+  align-items: center;
+  padding: 0 10px 0 12px;
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+  z-index: 50;
+}
+.tb-brand { display: flex; align-items: center; gap: 8px; }
+.tb-logo {
+  width: 21px; height: 21px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  border: 1px solid rgba(56,189,248,.45);
+  box-shadow: 0 0 9px rgba(56,189,248,.3);
+}
+.tb-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tb-name {
+  font-weight: 700; font-size: 12.5px; letter-spacing: -.2px; color: var(--t0);
+}
+.tb-sep { width: 1px; height: 10px; background: var(--ln2); margin: 0 8px; }
+.tb-ver { font-family: var(--mo); font-size: 10px; color: var(--t2); }
+.tb-r { margin-left: auto; display: flex; gap: 1px; -webkit-app-region: no-drag; }
+.wc {
+  width: 26px; height: 26px; border-radius: var(--rs); border: none;
+  background: transparent; color: var(--t2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .1s, color .1s;
+}
+.wc:hover { background: var(--bg3); color: var(--t0); }
+.wc.xb:hover { background: rgba(240,82,82,.15); color: var(--err); }
+
+/* ────────────────────── LAYOUT ────────────────────── */
+#app { display: flex; height: calc(100vh - 38px); }
+
+/* ────────────────────── NAV ────────────────────── */
+#nav {
+  width: 42px;
+  background: var(--bg1);
+  border-right: 1px solid var(--ln);
+  display: flex; flex-direction: column;
+  align-items: center; padding: 5px 0; gap: 1px;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width .18s ease;
+}
+#nav.collapsed { width: 0; border-right: none; padding: 0; }
+/* toggle button sits in titlebar */
+#nav-toggle {
+  width: 26px; height: 26px; border-radius: var(--rs); border: none;
+  background: transparent; color: var(--t2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s; -webkit-app-region: no-drag; flex-shrink: 0;
+}
+#nav-toggle:hover { background: var(--bg3); color: var(--t0); }
+.nb {
+  width: 30px; height: 30px; border-radius: var(--rs); border: none;
+  background: transparent; color: var(--t2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s; position: relative; flex-shrink: 0;
+}
+.nb:hover { background: var(--bg3); color: var(--t1); }
+.nb.on { background: var(--bg3); color: var(--t0); }
+.nb.on::before {
+  content: ''; position: absolute; left: -5px; top: 7px; bottom: 7px;
+  width: 2px; background: linear-gradient(to bottom, var(--a1), var(--a2));
+  border-radius: 0 2px 2px 0;
+}
+.nb[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+  background: var(--bg4); border: 1px solid var(--ln3);
+  color: var(--t0); font-family: var(--ui); font-size: 11px; font-weight: 500;
+  padding: 4px 9px; border-radius: var(--rs);
+  white-space: nowrap; pointer-events: none; z-index: 9999;
+  box-shadow: 0 4px 14px rgba(0,0,0,.3);
+}
+.ngap { flex: 1; }
+
+/* ────────────────────── PANELS ────────────────────── */
+#panels { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.pnl { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.pnl.on { display: flex; }
+
+/* ═══════════════════════ EDITOR ═══════════════════════ */
+
+/* tabs row */
+#tabs {
+  height: 35px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--ln);
+  display: flex; align-items: center; padding: 0 8px 0 6px; gap: 2px;
+  overflow-x: auto; flex-shrink: 0;
+}
+#tabs::-webkit-scrollbar { display: none; }
+.tab {
+  height: 26px; padding: 0 8px;
+  display: flex; align-items: center; gap: 5px;
+  border-radius: var(--rs);
+  border: 1px solid transparent;
+  color: var(--t2); font-family: var(--mo); font-size: 10.5px;
+  cursor: pointer; white-space: nowrap; user-select: none;
+  flex-shrink: 0; position: relative;
+  transition: color .1s, background .1s, border-color .1s;
+}
+.tab:hover { color: var(--t1); background: var(--bg3); border-color: var(--ln2); }
+.tab.on { background: var(--bg3); border-color: var(--ln3); color: var(--t0); }
+.tab-icon { color: var(--t2); display: flex; align-items: center; flex-shrink: 0; opacity: .7; }
+.tab.on .tab-icon { opacity: 1; color: var(--a1); }
+.tab-x {
+  width: 12px; height: 12px; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .1s, background .1s; color: var(--t2);
+  margin-left: 1px;
+}
+.tab:hover .tab-x, .tab.on .tab-x { opacity: 1; }
+.tab-x:hover { background: var(--bg5); color: var(--t0); }
+.tabadd {
+  height: 22px; width: 22px; border-radius: var(--rs); border: 1px solid var(--ln2);
+  background: transparent; color: var(--t2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s; flex-shrink: 0; margin-left: 1px;
+}
+.tabadd:hover { background: var(--bg3); color: var(--t0); border-color: var(--ln3); }
+
+/* editor area */
+#ew { flex: 1; display: flex; overflow: hidden; background: var(--edi); }
+#gutter {
+  width: 32px; padding: 13px 6px 13px 0;
+  background: var(--edi);
+  border-right: 1px solid var(--ln);
+  font-family: var(--mo); font-size: 11.5px; line-height: 1.65;
+  color: var(--t3); text-align: right;
+  overflow: hidden; flex-shrink: 0;
+  pointer-events: none; user-select: none;
+}
+#edwrap { flex: 1; position: relative; overflow: hidden; background: var(--edi); }
+#editor, #hlayer {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  font-family: var(--mo); font-size: 12px; line-height: 1.65;
+  padding: 13px 14px; margin: 0; border: none; outline: none;
+  tab-size: 4; white-space: pre; overflow: auto;
+  background: transparent;
+}
+#editor {
+  color: transparent;
+  caret-color: var(--t0); resize: none; z-index: 2;
+  user-select: text; -webkit-user-select: text;
+}
+#hlayer {
+  color: var(--t0); pointer-events: none; z-index: 1;
+  word-break: normal; overflow-wrap: normal;
+  will-change: contents;
+}
+#editor::-webkit-scrollbar { display: none; }
+
+/* syntax colours */
+.sk  { color: var(--kw); }
+.sf  { color: var(--fn); }
+.ss  { color: var(--st); }
+.sn  { color: var(--nm); }
+.sc  { color: var(--cm); font-style: italic; }
+.so  { color: var(--op); }
+.sb2 { color: var(--bl); }
+
+/* ── toolbar ── */
+#bar {
+  height: 41px;
+  background: var(--bg1);
+  border-top: 1px solid var(--ln);
+  display: flex; align-items: center; gap: 3px; padding: 0 8px 0 6px;
+  flex-shrink: 0;
+}
+.bsep { width: 1px; height: 15px; background: var(--ln2); margin: 0 2px; }
+.btn {
+  height: 27px; padding: 0 10px;
+  display: flex; align-items: center; gap: 5px;
+  border-radius: var(--rs); border: 1px solid transparent;
+  background: transparent; color: var(--t1);
+  font-family: var(--ui); font-weight: 500; font-size: 11.5px;
+  cursor: pointer; transition: all .12s; white-space: nowrap;
+}
+.btn:hover { background: var(--bg3); color: var(--t0); border-color: var(--ln2); }
+.btn:active { background: var(--bg4); }
+
+/* execute – gradient, no weird lines */
+#bexec {
+  height: 28px; padding: 0 15px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: #fff; border: none; border-radius: var(--rs);
+  font-family: var(--ui); font-weight: 700; font-size: 11.5px;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 2px 12px rgba(56,189,248,.3);
+  transition: box-shadow .15s, transform .1s, opacity .15s;
+  flex-shrink: 0;
+}
+#bexec:hover:not(:disabled) {
+  box-shadow: 0 3px 20px rgba(56,189,248,.5);
+  transform: translateY(-1px);
+}
+#bexec:active { transform: translateY(0); }
+#bexec:disabled {
+  opacity: .35; cursor: not-allowed;
+  box-shadow: none; transform: none;
+}
+#bexec.busy { opacity: .6; pointer-events: none; }
+.espin {
+  width: 10px; height: 10px; display: none;
+  border: 1.8px solid rgba(255,255,255,.25); border-top-color: #fff;
+  border-radius: 50%; animation: spin .5s linear infinite;
+}
+#bexec.busy .espin { display: block; }
+#bexec.busy .eico  { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* attach button — identical style to execute */
+#battach {
+  height: 28px; padding: 0 15px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: #fff; border: none; border-radius: var(--rs);
+  font-family: var(--ui); font-weight: 700; font-size: 11.5px;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 2px 12px rgba(56,189,248,.3);
+  transition: box-shadow .15s, transform .1s, opacity .15s;
+  flex-shrink: 0;
+}
+#battach:hover { box-shadow: 0 3px 20px rgba(56,189,248,.5); transform: translateY(-1px); }
+#battach:active { transform: translateY(0); }
+#battach.attaching { opacity: .6; pointer-events: none; }
+#battach.hidden { display: none !important; }
+
+.bar-r { margin-left: auto; display: flex; align-items: center; gap: 3px; }
+
+/* status pill */
+.spill {
+  height: 22px; padding: 0 8px;
+  display: flex; align-items: center; gap: 5px;
+  background: var(--bg2); border: 1px solid var(--ln2);
+  border-radius: 11px;
+  font-family: var(--mo); font-size: 9.5px; color: var(--t2);
+}
+.sdot { width: 5px; height: 5px; border-radius: 50%; background: var(--t3); transition: all .3s; }
+.sdot.ok  { background: var(--ok);  box-shadow: 0 0 5px var(--ok);  }
+.sdot.err { background: var(--err); box-shadow: 0 0 5px var(--err); }
+.sdot.run { background: var(--inf); box-shadow: 0 0 5px var(--inf); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ── resize + console ── */
+#rh {
+  height: 3px; flex-shrink: 0;
+  cursor: ns-resize; background: transparent;
+  transition: background .15s;
+}
+#rh:hover { background: linear-gradient(to right, var(--a1), var(--a2)); }
+#conwrap {
+  flex-shrink: 0; height: 0; overflow: hidden;
+  background: var(--bg1); border-top: 1px solid transparent;
+  transition: height .18s ease;
+}
+#conwrap.on { height: 160px; border-top-color: var(--ln); }
+#con-hdr {
+  height: 28px; display: flex; align-items: center;
+  padding: 0 8px; border-bottom: 1px solid var(--ln);
+}
+.con-label {
+  font-family: var(--mo); font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.1px; color: var(--t2);
+}
+.con-acts { margin-left: auto; display: flex; gap: 2px; }
+.cbtn {
+  width: 21px; height: 21px; border-radius: var(--rs); border: none;
+  background: transparent; color: var(--t2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s;
+}
+.cbtn:hover { background: var(--bg3); color: var(--t0); }
+#con-body {
+  height: calc(160px - 28px); overflow-y: auto;
+  padding: 4px 10px; font-family: var(--mo); font-size: 10.5px; line-height: 1.9;
+}
+.lg { display: flex; }
+.lm { flex: 1; word-break: break-word; }
+.lg.ok   .lm { color: var(--ok);  }
+.lg.err  .lm { color: var(--err); }
+.lg.warn .lm { color: var(--warn);}
+.lg.sys  .lm { color: var(--t1);  }
+.lg.dim  .lm { color: var(--t2);  }
+.lg.print .lm { color: var(--t0); }
+
+/* ═══════════════════════ CLIENTS ═══════════════════════ */
+#p-clients { background: var(--bg); }
+.ph {
+  height: 37px; background: var(--bg1); border-bottom: 1px solid var(--ln);
+  display: flex; align-items: center; padding: 0 11px; gap: 7px; flex-shrink: 0;
+}
+.ph-title { font-weight: 700; font-size: 12.5px; color: var(--t0); }
+.ph-gap { flex: 1; }
+.ph-btn {
+  height: 24px; padding: 0 9px;
+  display: flex; align-items: center; gap: 4px;
+  border-radius: var(--rs); border: 1px solid var(--ln2);
+  background: transparent; color: var(--t1);
+  font-family: var(--ui); font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all .12s;
+}
+.ph-btn:hover { background: var(--bg3); color: var(--t0); border-color: var(--ln3); }
+#clist { flex: 1; overflow-y: auto; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.cc {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px;
+  background: var(--bg2); border: 1px solid var(--ln2); border-radius: var(--r);
+  cursor: pointer; transition: border-color .12s, background .12s;
+}
+.cc:hover { border-color: var(--ln3); background: var(--bg3); }
+.cc.sel { border-color: var(--a1); background: var(--alow); }
+.cav {
+  width: 32px; height: 32px; border-radius: 6px; background: var(--bg4);
+  overflow: hidden; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; border: 1px solid var(--ln2);
+}
+.cav img { width: 100%; height: 100%; object-fit: cover; }
+.ci { flex: 1; min-width: 0; }
+.cname { font-weight: 600; font-size: 12px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cpid  { font-family: var(--mo); font-size: 9.5px; color: var(--t2); }
+.ctag {
+  font-size: 9.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+  background: rgba(61,201,122,.1); color: var(--ok);
+  border: 1px solid rgba(61,201,122,.2); flex-shrink: 0; letter-spacing: .2px;
+}
+.ccb {
+  width: 17px; height: 17px; border-radius: 4px;
+  border: 1.5px solid var(--ln3); background: transparent;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+}
+.cc.sel .ccb { background: linear-gradient(135deg, var(--a1), var(--a2)); border-color: transparent; }
+.c-kill {
+  width: 24px; height: 24px; border-radius: var(--rs); border: 1px solid var(--ln2);
+  background: transparent; color: var(--t2); cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+}
+.c-kill:hover {
+  background: rgba(240,82,82,.1); border-color: rgba(240,82,82,.3); color: var(--err);
+}
+.no-c {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 7px; color: var(--t2); font-size: 11.5px;
+  text-align: center; line-height: 1.7;
+}
+.no-c svg { color: var(--t3); margin-bottom: 4px; }
+
+/* ═══════════════════════ SCRIPT HUB ═══════════════════════ */
+#p-hub { background: var(--bg); }
+#hub-top {
+  height: 37px; background: var(--bg1); border-bottom: 1px solid var(--ln);
+  display: flex; align-items: center; padding: 0 10px; gap: 7px; flex-shrink: 0;
+}
+.hub-title { font-weight: 700; font-size: 12.5px; color: var(--t0); flex-shrink: 0; }
+#hub-sw {
+  flex: 1; max-width: 320px; height: 25px;
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg3); border: 1px solid var(--ln2); border-radius: var(--rs); padding: 0 7px;
+}
+#hub-sw svg { color: var(--t2); flex-shrink: 0; }
+#hub-q {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--t0); font-family: var(--ui); font-size: 11.5px; padding: 0 6px;
+}
+#hub-q::placeholder { color: var(--t2); }
+#hub-go {
+  height: 19px; padding: 0 8px; border-radius: 3px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: #fff; font-family: var(--ui); font-weight: 600; font-size: 10.5px;
+  border: none; cursor: pointer; transition: opacity .1s;
+}
+#hub-go:hover { opacity: .85; }
+.hub-sel {
+  background: var(--bg3); border: 1px solid var(--ln2); border-radius: var(--rs);
+  color: var(--t1); font-family: var(--ui); font-size: 11px;
+  padding: 3px 7px; outline: none; cursor: pointer; height: 25px;
+}
+#hub-grid {
+  flex: 1; overflow-y: auto; padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+#hub-empty {
+  flex: 1; display: none; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; color: var(--t2);
+  font-size: 12px; text-align: center; line-height: 1.7;
+}
+#hub-empty svg { color: var(--t3); margin-bottom: 4px; }
+.sc-card {
+  background: var(--bg2); border: 1px solid var(--ln2); border-radius: var(--r);
+  overflow: hidden; display: flex; flex-direction: row; align-items: stretch;
+  transition: border-color .12s; flex-shrink: 0; min-height: 72px;
+}
+.sc-card:hover { border-color: var(--ln3); }
+.sc-thumb {
+  width: 100px; height: 72px; background: var(--bg4); display: block;
+  object-fit: cover; flex-shrink: 0;
+}
+.sc-thumb-ph {
+  width: 100px; height: 72px; background: var(--bg4); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.sc-body {
+  padding: 8px 10px; flex: 1; display: flex; flex-direction: column;
+  justify-content: center; gap: 2px; min-width: 0;
+}
+.sc-title {
+  font-weight: 600; font-size: 12px; line-height: 1.35; color: var(--t0);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sc-game { font-size: 10px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-tags { display: flex; gap: 3px; flex-wrap: nowrap; margin-top: 2px; overflow: hidden; }
+.sc-tag {
+  font-size: 8.5px; font-weight: 600; padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--ln2); color: var(--t2); text-transform: uppercase;
+  letter-spacing: .3px; white-space: nowrap; flex-shrink: 0;
+}
+.sc-tag.verified { color: var(--ok);  border-color: rgba(61,201,122,.3); background: rgba(61,201,122,.07); }
+.sc-tag.univ     { color: var(--inf); border-color: rgba(76,163,228,.3); background: rgba(76,163,228,.07); }
+.sc-tag.patched  { color: var(--err); border-color: rgba(240,82,82,.3);  background: rgba(240,82,82,.07); }
+.sc-tag.key      { color: var(--warn);border-color: rgba(245,166,35,.3); background: rgba(245,166,35,.07); }
+.sc-foot {
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 5px; padding: 8px 10px 8px 6px; flex-shrink: 0;
+}
+.sc-exec {
+  width: 72px; height: 26px; border-radius: var(--rs);
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: #fff; font-family: var(--ui); font-weight: 700; font-size: 11px;
+  border: none; cursor: pointer; transition: opacity .12s;
+  box-shadow: 0 0 8px rgba(124,92,252,.2); white-space: nowrap;
+}
+.sc-exec:hover { opacity: .85; }
+.sc-load {
+  width: 72px; height: 26px; border-radius: var(--rs);
+  border: 1px solid var(--ln2); background: transparent;
+  color: var(--t1); font-family: var(--ui); font-size: 11px;
+  cursor: pointer; transition: all .1s; white-space: nowrap;
+}
+.sc-load:hover { background: var(--bg4); color: var(--t0); }
+.hub-pgbar {
+  height: 34px; background: var(--bg1); border-top: 1px solid var(--ln);
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; flex-shrink: 0;
+}
+.pg-btn {
+  height: 23px; padding: 0 9px; border-radius: var(--rs);
+  border: 1px solid var(--ln2); background: transparent; color: var(--t1);
+  font-family: var(--ui); font-size: 10.5px; cursor: pointer; transition: all .1s;
+}
+.pg-btn:hover:not(:disabled) { background: var(--bg3); color: var(--t0); }
+.pg-btn:disabled { opacity: .3; cursor: default; }
+.pg-info { font-family: var(--mo); font-size: 9.5px; color: var(--t2); }
+.hub-attrib { font-size: 9.5px; color: var(--t3); padding: 0 6px; }
+.hub-spin {
+  width: 20px; height: 20px;
+  border: 2px solid var(--bg4); border-top-color: var(--a1);
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+
+/* ═══════════════════════ SETTINGS ═══════════════════════ */
+#p-settings { background: var(--bg); overflow-y: auto; padding: 18px; }
+.s-h    { font-weight: 800; font-size: 16px; letter-spacing: -.3px; margin-bottom: 3px; }
+.s-sub  { font-size: 11.5px; color: var(--t2); margin-bottom: 20px; }
+.s-sec  { margin-bottom: 20px; }
+.s-lbl  {
+  font-family: var(--mo); font-size: 8.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.2px; color: var(--t2);
+  margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid var(--ln);
+}
+.srow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--ln); gap: 12px;
+}
+.srow:last-child { border-bottom: none; }
+.si { flex: 1; }
+.sn2 { font-weight: 600; font-size: 12px; margin-bottom: 2px; color: var(--t0); }
+.sd  { font-size: 11px; color: var(--t2); line-height: 1.5; }
+.tog {
+  width: 33px; height: 18px;
+  background: var(--bg5); border: 1px solid var(--ln3);
+  border-radius: 9px; cursor: pointer; position: relative;
+  transition: all .18s; flex-shrink: 0;
+}
+.tog.on { background: linear-gradient(135deg, var(--a1), var(--a2)); border-color: transparent; }
+.tog::after {
+  content: ''; position: absolute; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--t2);
+  top: 2px; left: 2px; transition: all .18s;
+}
+.tog.on::after { transform: translateX(15px); background: #fff; }
+.ssel {
+  background: var(--bg3); border: 1px solid var(--ln2); border-radius: var(--rs);
+  color: var(--t0); font-family: var(--ui); font-size: 11.5px;
+  padding: 4px 8px; outline: none; cursor: pointer;
+}
+.sbar2 { display: flex; align-items: center; gap: 7px; padding-top: 10px; }
+.sbtn {
+  height: 29px; padding: 0 15px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: #fff; font-family: var(--ui); font-weight: 700; font-size: 11.5px;
+  border: none; border-radius: var(--rs); cursor: pointer;
+  box-shadow: 0 0 10px rgba(124,92,252,.2); transition: all .15s;
+}
+.sbtn:hover { box-shadow: 0 0 16px rgba(124,92,252,.4); }
+.rbtn {
+  height: 29px; padding: 0 12px; background: transparent; color: var(--t1);
+  font-family: var(--ui); font-weight: 500; font-size: 11.5px;
+  border: 1px solid var(--ln2); border-radius: var(--rs); cursor: pointer; transition: all .15s;
+}
+.rbtn:hover { background: var(--bg3); color: var(--t0); }
+.sfb { font-size: 11px; color: var(--ok); opacity: 0; transition: opacity .25s; }
+.sfb.on { opacity: 1; }
+
+/* ═══════════════════════ ABOUT ═══════════════════════ */
+#p-about { background: var(--bg); overflow-y: auto; padding: 18px; }
+.a-hero {
+  background: var(--bg2); border: 1px solid var(--ln2); border-radius: var(--r);
+  padding: 15px; margin-bottom: 14px; display: flex; align-items: center; gap: 13px;
+}
+.a-ico {
+  width: 42px; height: 42px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+  border: 1px solid rgba(124,92,252,.3); box-shadow: 0 0 14px rgba(124,92,252,.3);
+}
+.a-ico img { width: 100%; height: 100%; object-fit: cover; }
+.a-name { font-weight: 800; font-size: 17px; letter-spacing: -.4px; margin-bottom: 2px; }
+.a-ver  { font-family: var(--mo); font-size: 10px; color: var(--t2); }
+.a-desc { font-size: 11.5px; color: var(--t1); line-height: 1.7; margin-bottom: 13px; }
+.a-sect { font-family: var(--mo); font-size: 8.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--t2); margin-bottom: 7px; }
+.kl { list-style: none; margin-bottom: 14px; }
+.kl li { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: 1px solid var(--ln); font-size: 11.5px; color: var(--t1); }
+.kl li:last-child { border-bottom: none; }
+.kbd { font-family: var(--mo); font-size: 9.5px; background: var(--bg3); border: 1px solid var(--ln3); border-radius: 4px; padding: 1px 5px; color: var(--t0); white-space: nowrap; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- titlebar -->
+<div id="tb">
+  <button id="nav-toggle" title="Toggle sidebar">
+    <svg width="14" height="12" viewBox="0 0 14 12" fill="none"><path d="M1 1h12M1 6h8M1 11h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </button>
+  <div class="tb-brand">
+    <div class="tb-logo">
+      <img src="https://images-ext-1.discordapp.net/external/4MNkC85AxqYoPo3IMHvfk4tI8mPb05LuuqJE6ywNToY/%3Fsize%3D4096/https/cdn.discordapp.com/icons/1480599029044744434/ea5313ec3a57b781d78a776754486101.png?format=webp&quality=lossless" alt="logo">
+    </div>
+    <span class="tb-name">juju<span style="color:var(--a1)">.lol</span></span>
+  </div>
+  <div class="tb-r">
+    <button class="wc" id="bmin"><svg width="10" height="2" viewBox="0 0 10 2"><path d="M1 1h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <button class="wc" id="bmax"><svg width="10" height="10" viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg></button>
+    <button class="wc xb" id="bclose"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+  </div>
+</div>
+
+<!-- ── Tab rename modal ── -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:center;justify-content:center">
+  <div id="modal-box" style="background:var(--bg2);border:1px solid var(--ln3);border-radius:10px;padding:20px;width:280px;box-shadow:0 12px 40px rgba(0,0,0,.5)">
+    <div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--t0)">Rename Tab</div>
+    <input id="modal-input" type="text" style="width:100%;background:var(--bg3);border:1px solid var(--ln3);border-radius:var(--rs);color:var(--t0);font-family:var(--mo);font-size:12px;padding:7px 10px;outline:none;margin-bottom:12px;transition:border-color .12s" spellcheck="false"/>
+    <div style="display:flex;gap:7px;justify-content:flex-end">
+      <button id="modal-cancel" style="height:28px;padding:0 13px;background:transparent;border:1px solid var(--ln2);border-radius:var(--rs);color:var(--t1);font-family:var(--ui);font-size:11.5px;cursor:pointer;transition:all .1s">Cancel</button>
+      <button id="modal-save" style="height:28px;padding:0 13px;background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:var(--rs);color:#fff;font-family:var(--ui);font-weight:700;font-size:11.5px;cursor:pointer;transition:opacity .1s">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+  <div id="nav">
+    <button class="nb on" data-p="editor" data-tip="Editor">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h7M2 11h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <button class="nb" data-p="clients" data-tip="Clients">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4.5" r="2.2" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="4.5" r="1.8" stroke="currentColor" stroke-width="1.2"/><path d="M1 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11 9.5c1.5.4 2.5 1.5 2.5 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="nb" data-p="hub" data-tip="Script Hub">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+    </button>
+    <div class="ngap"></div>
+    <button class="nb" data-p="settings" data-tip="Settings">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M7 1.5v1M7 11.5v1M1.5 7h1M11.5 7h1M3 3l.7.7M10.3 10.3l.7.7M3 11l.7-.7M10.3 3.7l.7-.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    </button>
+    <button class="nb" data-p="about" data-tip="About">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 6.5v3.5M7 4.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div id="panels">
+
+    <!-- ══ EDITOR ══ -->
+    <div class="pnl on" id="p-editor">
+      <div id="tabs">
+        <button class="tabadd" id="btnadd">
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 1v7M1 4.5h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div id="ew">
+        <div id="gutter"><div>1</div></div>
+        <div id="edwrap">
+          <div id="hlayer" aria-hidden="true"></div>
+          <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+        </div>
+      </div>
+
+      <div id="bar">
+        <button id="bexec" disabled>
+          <span class="eico">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="none"><path d="M1.5 1.2l6.5 3.8-6.5 3.8V1.2z" fill="currentColor"/></svg>
+          </span>
+          <div class="espin"></div>
+          Execute
+        </button>
+        <div class="bsep"></div>
+        <button class="btn" id="bclear">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 2l7 7M9 2L2 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Clear
+        </button>
+        <button class="btn" id="bopen">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 8.5V4.5a1 1 0 011-1h1.8l1.4 1.5H9.5a1 1 0 011 1V8.5a1 1 0 01-1 1h-7.5a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>
+          Open
+        </button>
+        <button class="btn" id="bsave">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 9.5V2a.5.5 0 01.5-.5H7.5l2 2v6.5a.5.5 0 01-.5.5h-7.5a.5.5 0 01-.5-.5z" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M3.5 9.5V7h4v2.5M3.5 1.5V3.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Save
+        </button>
+        <button id="battach" class="hidden">
+          <svg width="10" height="11" viewBox="0 0 10 11" fill="none"><path d="M5 1v6M2.5 4.5L5 7l2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 9.5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Attach
+        </button>
+        <div class="bar-r">
+          <div class="spill">
+            <div class="sdot" id="sdot"></div>
+            <span id="stxt">no client</span>
+          </div>
+          <button class="btn" id="bconclr" title="Clear output">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 2h9M4 2V1h3V2M2 2l.6 7a1 1 0 001 .9h3.8a1 1 0 001-.9L9 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="btn" id="bcon" title="Toggle output">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="1.5" width="9" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M3 4.5l2 2-2 2M6.5 8.5h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="rh"></div>
+
+      <div id="conwrap" class="on">
+        <div id="con-hdr">
+          <span class="con-label">Output</span>
+          <div class="con-acts">
+            <button class="cbtn" id="bcondn" title="Scroll to bottom">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="con-body"></div>
+      </div>
+    </div>
+
+    <!-- ══ CLIENTS ══ -->
+    <div class="pnl" id="p-clients">
+      <div class="ph">
+        <span class="ph-title">Clients</span>
+        <div class="ph-gap"></div>
+        <button class="ph-btn" id="brefresh">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M9.5 5.5a4 4 0 11-.9-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.6 1v2.2H6.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div id="clist"></div>
+    </div>
+
+    <!-- ══ SCRIPT HUB ══ -->
+    <div class="pnl" id="p-hub">
+      <div id="hub-top">
+        <span class="hub-title">Script Hub</span>
+        <div id="hub-sw">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="4.8" cy="4.8" r="3.3" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 7.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <input id="hub-q" type="text" placeholder="Search scripts..." spellcheck="false">
+          <button id="hub-go">Go</button>
+        </div>
+        <select class="hub-sel" id="hub-sort">
+          <option value="">Latest</option>
+          <option value="views">Most Viewed</option>
+          <option value="likes">Most Liked</option>
+        </select>
+      </div>
+      <div id="hub-grid"></div>
+      <div id="hub-empty"></div>
+      <div class="hub-pgbar">
+        <button class="pg-btn" id="bprev" disabled>← Prev</button>
+        <span class="pg-info" id="pginfo">—</span>
+        <button class="pg-btn" id="bnext" disabled>Next →</button>
+        <span class="hub-attrib">Powered by ScriptBlox.com</span>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="pnl" id="p-settings">
+      <div class="s-h">Settings</div>
+      <div class="s-sub">Customize juju.lol.</div>
+      <div class="s-sec">
+        <div class="s-lbl">Editor</div>
+        <div class="srow"><div class="si"><div class="sn2">Syntax Highlighting</div><div class="sd">Color Lua keywords, strings, functions, comments.</div></div><div class="tog on" id="tog-syn"></div></div>
+        <div class="srow"><div class="si"><div class="sn2">Line Numbers</div></div><div class="tog on" id="tog-ln"></div></div>
+        <div class="srow"><div class="si"><div class="sn2">Font Size</div></div><select class="ssel" id="sel-fs"><option value="11">11px</option><option value="12" selected>12px</option><option value="13">13px</option><option value="14">14px</option></select></div>
+        <div class="srow"><div class="si"><div class="sn2">Tab Size</div></div><select class="ssel" id="sel-ts"><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option></select></div>
+      </div>
+      <div class="s-sec">
+        <div class="s-lbl">Tabs</div>
+        <div class="srow">
+          <div class="si">
+            <div class="sn2">Save Tabs on Close</div>
+            <div class="sd">Remember all tabs and their contents when you reopen juju.lol.</div>
+          </div>
+          <div class="tog on" id="tog-savetabs"></div>
+        </div>
+      </div>
+      <div class="s-sec">
+        <div class="s-lbl">Attachment</div>
+        <div class="srow">
+          <div class="si">
+            <div class="sn2">Auto-attach</div>
+            <div class="sd">Automatically attach to Roblox when an instance opens. When off, use the Attach button in the toolbar.</div>
+          </div>
+          <div class="tog on" id="tog-autoattach"></div>
+        </div>
+      </div>
+      <div class="s-sec">
+        <div class="s-lbl">Console</div>
+        <div class="srow"><div class="si"><div class="sn2">Auto-scroll</div><div class="sd">Scroll to bottom on new output.</div></div><div class="tog on" id="tog-as"></div></div>
+        <div class="srow"><div class="si"><div class="sn2">Auto-clear on Execute</div></div><div class="tog" id="tog-ac"></div></div>
+      </div>
+      <div class="sbar2">
+        <button class="sbtn" id="bsaveset">Save</button>
+        <button class="rbtn" id="bresetset">Reset</button>
+        <span class="sfb" id="sfb">Saved.</span>
+      </div>
+    </div>
+
+    <!-- ══ ABOUT ══ -->
+    <div class="pnl" id="p-about">
+      <div class="a-hero">
+        <div class="a-ico">
+          <img src="https://images-ext-1.discordapp.net/external/4MNkC85AxqYoPo3IMHvfk4tI8mPb05LuuqJE6ywNToY/%3Fsize%3D4096/https/cdn.discordapp.com/icons/1480599029044744434/ea5313ec3a57b781d78a776754486101.png?format=webp&quality=lossless" alt="juju.lol"/>
+        </div>
+        <div>
+          <div class="a-name">juju.lol</div>
+          <div class="a-ver">v2.0 · Synapse Z custom executor</div>
+        </div>
+      </div>
+      <p class="a-desc">Writes directly to <code style="font-family:var(--mo);font-size:10px;color:var(--t1)">%LOCALAPPDATA%\Synapse Z\bin\scheduler\</code> — exactly what the official C# API does, in pure Node.js.</p>
+      <div class="a-sect">Shortcuts</div>
+      <ul class="kl">
+        <li><span class="kbd">Ctrl+Enter</span> Execute script</li>
+        <li><span class="kbd">Ctrl+S</span> Save</li>
+        <li><span class="kbd">Ctrl+O</span> Open</li>
+        <li><span class="kbd">Ctrl+T</span> New tab</li>
+        <li><span class="kbd">Ctrl+W</span> Close tab</li>
+      </ul>
+      <div class="a-sect">Return Codes</div>
+      <ul class="kl">
+        <li><span class="kbd" style="color:var(--ok)">0</span> Queued</li>
+        <li><span class="kbd" style="color:var(--err)">1</span> Bin missing — Synapse Z not installed?</li>
+        <li><span class="kbd" style="color:var(--err)">2</span> Scheduler missing — Synapse Z not running</li>
+        <li><span class="kbd" style="color:var(--err)">3</span> No write access</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const api = window.synapseAPI;
+
+// ── Config ────────────────────────────────────────────────
+const D = { syn:true, ln:true, fs:'12', ts:'4', as:true, ac:false, autoAttach:true, saveTabs:true };
+let C = {...D};
+
+// ── Window ────────────────────────────────────────────────
+document.getElementById('bmin').onclick   = () => api?.minimize();
+document.getElementById('bmax').onclick   = () => api?.maximize();
+document.getElementById('bclose').onclick = () => api?.close();
+
+// ── Nav toggle ────────────────────────────────────────────
+const navEl = document.getElementById('nav');
+document.getElementById('nav-toggle').onclick = () => {
+  navEl.classList.toggle('collapsed');
+};
+
+// ── Nav ───────────────────────────────────────────────────
+document.querySelectorAll('.nb[data-p]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.nb[data-p]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('.pnl').forEach(p => p.classList.remove('on'));
+    document.getElementById('p-' + b.dataset.p)?.classList.add('on');
+    if (b.dataset.p === 'clients') refreshClients();
+    if (b.dataset.p === 'hub' && !hubLoaded) loadHub(1);
+  });
+});
+
+// ── Client state (global, persistent) ────────────────────
+let clients = [], selPids = new Set(), deselPids = new Set();
+// deselPids = PIDs the user has EXPLICITLY unchecked — never auto-reselect these
+
+// Whether Roblox is "attached" — in auto-attach mode this happens automatically,
+// in manual mode the user presses Attach first
+let attached = false;
+
+function updateAttachUI() {
+  const battach = document.getElementById('battach');
+  const bexec   = document.getElementById('bexec');
+  const sdot    = document.getElementById('sdot');
+  const stxt    = document.getElementById('stxt');
+  const hasClients = clients.length > 0;
+
+  if (C.autoAttach) {
+    // auto-attach: attach button always hidden, attached = hasClients
+    battach.classList.add('hidden');
+    attached = hasClients && selPids.size > 0;
+  } else {
+    // manual: show attach button when there are clients but not yet attached
+    if (!hasClients) {
+      battach.classList.add('hidden');
+      attached = false;
+    } else if (!attached) {
+      battach.classList.remove('hidden');
+    } else {
+      battach.classList.add('hidden');
+    }
+  }
+
+  if (attached && selPids.size > 0) {
+    sdot.className = 'sdot ok';
+    stxt.textContent = 'injected';
+    bexec.disabled = false;
+  } else if (hasClients && !attached && !C.autoAttach) {
+    sdot.className = 'sdot';
+    stxt.textContent = 'not attached';
+    bexec.disabled = true;
+  } else {
+    sdot.className = 'sdot';
+    stxt.textContent = 'no client';
+    bexec.disabled = true;
+  }
+}
+
+// Attach button click
+document.getElementById('battach').onclick = () => {
+  if (!clients.length) return;
+  attached = true;
+  // select all current clients that weren't explicitly deselected
+  clients.forEach(c => { if (!deselPids.has(c.pid)) selPids.add(c.pid); });
+  updateAttachUI();
+  if (document.getElementById('p-clients').classList.contains('on')) renderClients();
+};
+
+// Poll for clients every 4s to keep status dot fresh
+function syncStatus() {
+  api?.getRobloxProcesses?.()?.then(procs => {
+    const alive = (procs || []).map(p => p.pid);
+    const hadClients = clients.length > 0;
+    // remove dead pids
+    clients = clients.filter(c => alive.includes(c.pid));
+    selPids.forEach(pid => { if (!alive.includes(pid)) selPids.delete(pid); });
+    deselPids.forEach(pid => { if (!alive.includes(pid)) deselPids.delete(pid); });
+    // add brand-new PIDs
+    (procs || []).forEach(p => {
+      if (!clients.find(c => c.pid === p.pid)) {
+        clients.push(p);
+        // in auto-attach or if already attached, select new pids automatically
+        if ((C.autoAttach || attached) && !deselPids.has(p.pid)) selPids.add(p.pid);
+      }
+    });
+    // if all clients died, reset attached state
+    if (clients.length === 0) attached = false;
+    updateAttachUI();
+  });
+}
+
+function updateStatusDot() { updateAttachUI(); }
+// start polling
+setInterval(syncStatus, 4000);
+syncStatus(); // immediate first run
+
+// ── Tabs ──────────────────────────────────────────────────
+let tabs = [{id:0, name:'script_1.lua', content:''}], active = 0, tc = 0;
+const edEl = document.getElementById('editor');
+const hlEl = document.getElementById('hlayer');
+const gEl  = document.getElementById('gutter');
+
+function saveTab() { const t = tabs.find(t => t.id === active); if(t) t.content = edEl.value; }
+function loadTab(id) {
+  saveTab(); active = id;
+  const t = tabs.find(t => t.id === id);
+  edEl.value = t ? t.content : '';
+  renderTabs(); updateGutter(); doHL();
+}
+const TAB_ICON = `<span class="tab-icon"><svg width="11" height="12" viewBox="0 0 11 12" fill="none"><rect x=".8" y=".8" width="9.4" height="10.4" rx="1.6" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M3 4h5M3 6.5h5M3 9h2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg></span>`;
+
+function renderTabs() {
+  const add = document.getElementById('btnadd');
+  document.querySelectorAll('.tab').forEach(e => e.remove());
+  tabs.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (t.id === active ? ' on' : '');
+    el.innerHTML = TAB_ICON + `<span class="tname">${t.name}</span><span class="tab-x"><svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 1l5 5M6 1L1 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>`;
+    el.addEventListener('click', e => { if(e.target.closest('.tab-x')) return; loadTab(t.id); });
+    el.querySelector('.tab-x').addEventListener('click', () => closeTab(t.id));
+    el.addEventListener('dblclick', e => { if(e.target.closest('.tab-x')) return; openRenameModal(t.id); });
+    document.getElementById('tabs').insertBefore(el, add);
+  });
+}
+
+// ── Tab rename modal ──────────────────────────────────────
+let renamingTabId = null;
+const modalOverlay = document.getElementById('modal-overlay');
+const modalInput   = document.getElementById('modal-input');
+
+function openRenameModal(tabId) {
+  renamingTabId = tabId;
+  const t = tabs.find(t => t.id === tabId);
+  modalInput.value = t ? t.name : '';
+  modalOverlay.style.display = 'flex';
+  requestAnimationFrame(() => { modalInput.focus(); modalInput.select(); });
+}
+function closeModal() {
+  modalOverlay.style.display = 'none';
+  renamingTabId = null;
+}
+function saveRename() {
+  const val = modalInput.value.trim();
+  if (!val || renamingTabId === null) { closeModal(); return; }
+  const t = tabs.find(t => t.id === renamingTabId);
+  if (t) { t.name = val.endsWith('.lua') ? val : val + '.lua'; renderTabs(); }
+  closeModal();
+}
+document.getElementById('modal-save').onclick   = saveRename;
+document.getElementById('modal-cancel').onclick = closeModal;
+modalOverlay.addEventListener('click', e => { if(e.target === modalOverlay) closeModal(); });
+modalInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveRename();
+  if (e.key === 'Escape') closeModal();
+});
+// style focus ring on modal input
+modalInput.addEventListener('focus', () => modalInput.style.borderColor = 'var(--a1)');
+modalInput.addEventListener('blur',  () => modalInput.style.borderColor = 'var(--ln3)');
+function closeTab(id) {
+  if(tabs.length === 1) return;
+  const i = tabs.findIndex(t => t.id === id);
+  tabs.splice(i, 1);
+  if(active === id) loadTab(tabs[Math.max(0, i-1)].id);
+  else renderTabs();
+}
+document.getElementById('btnadd').onclick = () => {
+  saveTab(); tc++;
+  tabs.push({id:tc, name:`script_${tc+1}.lua`, content:''});
+  loadTab(tc);
+};
+
+// ── Gutter ────────────────────────────────────────────────
+function updateGutter() {
+  if(!C.ln) { gEl.style.display = 'none'; return; }
+  gEl.style.display = '';
+  const n = (edEl.value || '').split('\n').length;
+  gEl.innerHTML = Array.from({length:Math.max(n,1)}, (_,i) => `<div>${i+1}</div>`).join('');
+  gEl.scrollTop = edEl.scrollTop;
+}
+edEl.addEventListener('scroll', () => {
+  gEl.scrollTop  = edEl.scrollTop;
+  hlEl.scrollTop = edEl.scrollTop;
+  hlEl.scrollLeft = edEl.scrollLeft;
+});
+
+// ── Syntax ────────────────────────────────────────────────
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const KW   = new Set(['and','break','do','else','elseif','end','for','function','goto','if','in','local','not','or','repeat','return','then','until','while']);
+const BOOL = new Set(['true','false','nil']);
+const BT   = new Set(['print','pairs','ipairs','next','type','tostring','tonumber','error','pcall','xpcall','select','unpack','rawget','rawset','rawequal','rawlen','setmetatable','getmetatable','require','load','loadfile','dofile','collectgarbage','assert','coroutine','string','table','math','io','os','debug','game','workspace','script','wait','spawn','delay','tick','time','elapsedTime','warn','task']);
+function tokenLine(line){
+  if(/^\s*--/.test(line)) return `<span class="sc">${esc(line)}</span>`;
+  let r='',i=0;
+  while(i<line.length){
+    if(line[i]==='-'&&line[i+1]==='-'){ r+=`<span class="sc">${esc(line.slice(i))}</span>`; break; }
+    if(line[i]==='"'||line[i]==="'"){
+      const q=line[i]; let j=i+1;
+      while(j<line.length&&line[j]!==q){if(line[j]==='\\')j++;j++;}
+      r+=`<span class="ss">${esc(line.slice(i,j+1))}</span>`; i=j+1; continue;
+    }
+    if(/\d/.test(line[i])&&(i===0||!/\w/.test(line[i-1]))){
+      let j=i; while(j<line.length&&/[\d.xXa-fA-F]/.test(line[j]))j++;
+      r+=`<span class="sn">${esc(line.slice(i,j))}</span>`; i=j; continue;
+    }
+    if(/[a-zA-Z_]/.test(line[i])){
+      let j=i; while(j<line.length&&/\w/.test(line[j]))j++;
+      const w=line.slice(i,j);
+      r+=BOOL.has(w)?`<span class="sb2">${esc(w)}</span>`:KW.has(w)?`<span class="sk">${esc(w)}</span>`:BT.has(w)?`<span class="sf">${esc(w)}</span>`:esc(w);
+      i=j; continue;
+    }
+    if(/[=<>~+\-*\/%.#]/.test(line[i])){ r+=`<span class="so">${esc(line[i])}</span>`; i++; continue; }
+    r+=esc(line[i]); i++;
+  }
+  return r;
+}
+function doHL(){
+  if(!C.syn){ hlEl.textContent=edEl.value||''; return; }
+  hlEl.innerHTML=(edEl.value||'').split('\n').map(tokenLine).join('\n');
+  hlEl.scrollTop=edEl.scrollTop; hlEl.scrollLeft=edEl.scrollLeft;
+}
+// debounce highlight so typing feels instant — gutter updates sync, HL deferred
+let hlTimer = null;
+edEl.addEventListener('input',()=>{
+  updateGutter();
+  // instant: just copy plain text so caret/scroll never glitches
+  if (!C.syn) { hlEl.textContent = edEl.value || ''; return; }
+  clearTimeout(hlTimer);
+  hlTimer = setTimeout(doHL, 60); // 60ms after last keypress
+});
+edEl.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const sp=' '.repeat(+C.ts),s=edEl.selectionStart,en=edEl.selectionEnd;
+    edEl.value=edEl.value.substring(0,s)+sp+edEl.value.substring(en);
+    edEl.selectionStart=edEl.selectionEnd=s+sp.length;
+    updateGutter(); doHL();
+  }
+  if(e.ctrlKey&&e.key==='Enter'){ e.preventDefault(); execScript(); }
+  if(e.ctrlKey&&e.key==='s'){     e.preventDefault(); saveFile(); }
+  if(e.ctrlKey&&e.key==='o'){     e.preventDefault(); openFile(); }
+  if(e.ctrlKey&&e.key==='t'){     e.preventDefault(); document.getElementById('btnadd').click(); }
+  if(e.ctrlKey&&e.key==='w'){     e.preventDefault(); closeTab(active); }
+});
+
+// ── Console ───────────────────────────────────────────────
+const cb = document.getElementById('con-body');
+const cw = document.getElementById('conwrap');
+function lg(msg, type='sys'){
+  const el=document.createElement('div');
+  el.className='lg '+type;
+  el.innerHTML=`<span class="lm">${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
+  cb.appendChild(el);
+  if(C.as) cb.scrollTop=cb.scrollHeight;
+}
+document.getElementById('bconclr').onclick = () => cb.innerHTML='';
+document.getElementById('bcondn').onclick  = () => { cb.scrollTop=cb.scrollHeight; };
+document.getElementById('bcon').onclick    = () => cw.classList.toggle('on');
+
+// resize
+let rs=false,ry=0,rh0=0;
+document.getElementById('rh').addEventListener('mousedown',e=>{ rs=true; ry=e.clientY; rh0=cw.offsetHeight; document.body.style.cursor='ns-resize'; });
+document.addEventListener('mousemove',e=>{ if(!rs) return; const h=Math.min(500,Math.max(40,rh0+(ry-e.clientY))); cw.style.height=h+'px'; cw.classList.add('on'); });
+document.addEventListener('mouseup',()=>{ rs=false; document.body.style.cursor=''; });
+
+// ── Execute ───────────────────────────────────────────────
+const bexec = document.getElementById('bexec');
+async function execScript(pids){
+  const raw = edEl.value.trim();
+  if(!raw) return;
+  if(C.ac) cb.innerHTML='';
+  const targets = pids || (selPids.size ? [...selPids] : [undefined]);
+  bexec.classList.add('busy');
+  const sdot = document.getElementById('sdot');
+  sdot.className='sdot run';
+  try {
+    let anyFail=false;
+    for(const pid of targets){
+      const r = await api.execute(raw, pid);
+      if(r.code!==0){ anyFail=true; lg(`✗ ${r.message}${pid?' (pid '+pid+')':''}`, 'err'); }
+    }
+    if(!anyFail){ /* silent success — no noise */ }
+    else { sdot.className='sdot err'; }
+  } catch(e) {
+    lg('error: '+e.message,'err');
+    sdot.className='sdot err';
+  }
+  bexec.classList.remove('busy');
+  // restore after a moment
+  setTimeout(()=>{ updateStatusDot(); }, 1200);
+}
+bexec.onclick = () => execScript();
+
+async function openFile(){ const c=await api.openFile(); if(c!==null){ edEl.value=c; saveTab(); updateGutter(); doHL(); } }
+async function saveFile(){ saveTab(); await api.saveFile(edEl.value); }
+document.getElementById('bclear').onclick = () => { edEl.value=''; saveTab(); updateGutter(); doHL(); };
+document.getElementById('bopen').onclick  = openFile;
+document.getElementById('bsave').onclick  = saveFile;
+
+// ── Clients ───────────────────────────────────────────────
+async function refreshClients(){
+  const list = document.getElementById('clist');
+  list.innerHTML=`<div class="no-c"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.3"/><path d="M6 20a6 6 0 0112 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.3"/></svg><span>Scanning...</span></div>`;
+  try{
+    const st = await api.getSynzStatus();
+    if(!st.schedExists){
+      list.innerHTML=`<div class="no-c"><span>Synapse Z scheduler not found.<br>Make sure Synapse Z is running.</span></div>`;
+      return;
+    }
+    const procs = await api.getRobloxProcesses();
+    clients = procs || [];
+    if(!clients.length){
+      list.innerHTML=`<div class="no-c"><span>No Roblox instances found.<br>Open Roblox first.</span></div>`;
+      updateStatusDot(); return;
+    }
+    // auto-select NEW pids only — never override explicit deselects
+    clients.forEach(c=>{ if(!selPids.has(c.pid) && !deselPids.has(c.pid)) selPids.add(c.pid); });
+    renderClients(); updateStatusDot();
+  }catch(e){
+    list.innerHTML=`<div class="no-c"><span>Error: ${e.message}</span></div>`;
+  }
+}
+function renderClients(){
+  const list=document.getElementById('clist');
+  list.innerHTML='';
+  if(!clients.length){ list.innerHTML=`<div class="no-c"><span>No Roblox instances found.</span></div>`; updateStatusDot(); return; }
+  clients.forEach(c=>{
+    const sel=selPids.has(c.pid);
+    const el=document.createElement('div');
+    el.className='cc'+(sel?' sel':'');
+    el.innerHTML=`
+      <div class="cav">${c.avatar?`<img src="${c.avatar}"/>`:`<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5.5" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M2 13.5a5.5 5.5 0 0111 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`}</div>
+      <div class="ci">
+        <div class="cname">${c.username||'Roblox Player'}</div>
+        <div class="cpid">PID ${c.pid}${c.game?' · '+c.game:''}</div>
+      </div>
+      <span class="ctag">injected</span>
+      <div class="ccb">${sel?`<svg width="8" height="7" viewBox="0 0 8 7" fill="none"><path d="M1 3.5l2 2.5 4-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div>
+      <button class="c-kill" title="Terminate">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>`;
+    el.addEventListener('click',e=>{
+      if(e.target.closest('.c-kill')) return;
+      if(selPids.has(c.pid)){
+        selPids.delete(c.pid);
+        deselPids.add(c.pid);   // remember this was manually deselected
+      } else {
+        selPids.add(c.pid);
+        deselPids.delete(c.pid); // user re-selected, clear the desel memory
+      }
+      renderClients(); updateStatusDot();
+    });
+    el.querySelector('.c-kill').addEventListener('click',async e=>{
+      e.stopPropagation();
+      await api.terminateProcess(c.pid);
+      selPids.delete(c.pid);
+      deselPids.delete(c.pid);
+      clients=clients.filter(x=>x.pid!==c.pid);
+      renderClients(); updateStatusDot();
+    });
+    list.appendChild(el);
+  });
+}
+document.getElementById('brefresh').onclick=refreshClients;
+
+// ── Script Hub ────────────────────────────────────────────
+let hubLoaded=false, hubPage=1, hubTotal=1, hubQ='', hubSort2='';
+
+// Uses api.sbFetch which routes through Electron main process — no CORS
+async function loadHub(page=1, q=hubQ, sort=hubSort2){
+  hubLoaded=true; hubPage=page; hubQ=q; hubSort2=sort;
+  const grid  = document.getElementById('hub-grid');
+  const empty = document.getElementById('hub-empty');
+  grid.style.display='grid';
+  empty.style.display='none';
+  grid.innerHTML=`<div style="grid-column:1/-1;display:flex;justify-content:center;padding:40px 0"><div class="hub-spin"></div></div>`;
+  try {
+    let url;
+    const qTrim = q.trim();
+    if(qTrim){
+      url=`https://scriptblox.com/api/script/search?q=${encodeURIComponent(qTrim)}&page=${page}&max=20`;
+    } else {
+      url=`https://scriptblox.com/api/script/fetch?page=${page}&max=20`;
+      if(sort) url+=`&orderBy=${sort}&order=desc`;
+    }
+    const data = await api.sbFetch(url);
+    const scripts = data?.result?.scripts || [];
+    hubTotal = data?.result?.totalPages || 1;
+    renderHub(scripts);
+    document.getElementById('pginfo').textContent=`${page} / ${hubTotal}`;
+    document.getElementById('bprev').disabled=page<=1;
+    document.getElementById('bnext').disabled=page>=hubTotal;
+  } catch(e) {
+    grid.style.display='none';
+    empty.style.display='flex';
+    empty.innerHTML=`<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="11" stroke="currentColor" stroke-width="1.3"/><path d="M13 8v5M13 17v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Failed to load.<br>Error: ${e.message}</span>`;
+  }
+}
+function renderHub(scripts){
+  const grid  = document.getElementById('hub-grid');
+  const empty = document.getElementById('hub-empty');
+  if(!scripts.length){
+    grid.style.display='none'; empty.style.display='flex';
+    empty.innerHTML=`<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="11" stroke="currentColor" stroke-width="1.3"/><path d="M8 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>No scripts found.</span>`;
+    return;
+  }
+  grid.style.display='grid'; empty.style.display='none';
+  grid.innerHTML='';
+  scripts.forEach(s=>{
+    const card=document.createElement('div');
+    card.className='sc-card';
+    const imgUrl=s.image?(s.image.startsWith('http')?s.image:'https://scriptblox.com'+s.image):(s.game?.imageUrl?('https://scriptblox.com'+s.game.imageUrl):null);
+    const tags=[];
+    if(s.verified)    tags.push('<span class="sc-tag verified">Verified</span>');
+    if(s.isUniversal) tags.push('<span class="sc-tag univ">Universal</span>');
+    if(s.isPatched)   tags.push('<span class="sc-tag patched">Patched</span>');
+    if(s.key)         tags.push('<span class="sc-tag key">Key</span>');
+    card.innerHTML=`
+      ${imgUrl?`<img class="sc-thumb" src="${imgUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt=""/>`:''}
+      <div class="sc-thumb-ph" ${imgUrl?'style="display:none"':''}>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 9.5h8M6 12.5h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">${s.title||'Untitled'}</div>
+        <div class="sc-game">${s.game?.name||'Unknown'}</div>
+        ${tags.length?`<div class="sc-tags">${tags.join('')}</div>`:''}
+      </div>
+      <div class="sc-foot">
+        <button class="sc-exec">▷ Execute</button>
+        <button class="sc-load">Load</button>
+      </div>`;
+    card.querySelector('.sc-exec').addEventListener('click',e=>{
+      e.stopPropagation();
+      if(!s.script){ lg('No script content for: '+s.title,'warn'); return; }
+      document.querySelector('.nb[data-p="editor"]').click();
+      edEl.value=s.script; saveTab(); updateGutter(); doHL();
+      execScript();
+    });
+    card.querySelector('.sc-load').addEventListener('click',e=>{
+      e.stopPropagation();
+      if(!s.script){ lg('No script content.','warn'); return; }
+      document.querySelector('.nb[data-p="editor"]').click();
+      edEl.value=s.script; saveTab(); updateGutter(); doHL();
+    });
+    grid.appendChild(card);
+  });
+}
+document.getElementById('hub-go').onclick   = () => loadHub(1, document.getElementById('hub-q').value, hubSort2);
+document.getElementById('hub-q').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('hub-go').click(); });
+document.getElementById('hub-sort').addEventListener('change', e => loadHub(1, hubQ, e.target.value));
+document.getElementById('bprev').onclick = () => loadHub(hubPage-1);
+document.getElementById('bnext').onclick = () => loadHub(hubPage+1);
+
+// ── Settings ──────────────────────────────────────────────
+function bindTog(id,key,cb2){
+  const el=document.getElementById(id);
+  el.addEventListener('click',()=>{ el.classList.toggle('on'); C[key]=el.classList.contains('on'); if(cb2) cb2(); });
+}
+bindTog('tog-syn','syn',doHL);
+bindTog('tog-ln', 'ln', updateGutter);
+bindTog('tog-as', 'as');
+bindTog('tog-ac', 'ac');
+bindTog('tog-savetabs','saveTabs');
+bindTog('tog-autoattach','autoAttach',()=>{ if(!C.autoAttach){ attached=false; } updateAttachUI(); });
+document.getElementById('sel-fs').addEventListener('change',e=>{
+  C.fs=e.target.value;
+  [edEl,hlEl,gEl].forEach(el=>el.style.fontSize=e.target.value+'px');
+  updateGutter();
+});
+document.getElementById('sel-ts').addEventListener('change',e=>C.ts=e.target.value);
+document.getElementById('bsaveset').onclick=()=>{
+  const f=document.getElementById('sfb'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),2000);
+};
+document.getElementById('bresetset').onclick=()=>{
+  C={...D};
+  ['tog-syn','tog-ln','tog-as','tog-autoattach','tog-savetabs'].forEach(id=>document.getElementById(id).classList.add('on'));
+  ['tog-ac'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('sel-fs').value='12';
+  document.getElementById('sel-ts').value='4';
+  [edEl,hlEl,gEl].forEach(el=>el.style.fontSize='');
+  doHL(); updateGutter();
+};
+
+// ── Tab session save / restore ─────────────────────────────
+// Uses IPC to read/write a JSON file in %APPDATA%\juju.lol\session.json
+async function saveSession() {
+  if (!C.saveTabs) return;
+  saveTab(); // flush active tab content first
+  const payload = JSON.stringify({ tabs, active, tc });
+  await api.saveSession?.(payload);
+}
+async function restoreSession() {
+  const raw = await api.loadSession?.();
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    if (s.tabs && s.tabs.length) {
+      tabs = s.tabs;
+      active = s.active ?? tabs[0].id;
+      tc = s.tc ?? tabs.length - 1;
+      edEl.value = (tabs.find(t => t.id === active) || tabs[0]).content || '';
+    }
+  } catch(e) { /* corrupt session, ignore */ }
+}
+
+// Save when window is about to close
+window.addEventListener('beforeunload', () => { if(C.saveTabs) saveSession(); });
+
+// ── Init ──────────────────────────────────────────────────
+(async () => {
+  await restoreSession();
+  renderTabs();
+  doHL();
+  updateGutter();
+})();
+</script>
+</body>
+</html>
